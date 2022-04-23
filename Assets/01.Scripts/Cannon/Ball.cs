@@ -18,17 +18,18 @@ public class Ball : MonoBehaviour
     private void OnCollisionEnter2D(Collision2D collision)
     {
 
-        CheckDamage();
+        bool isDebri = CheckDamage();
 
         OnCompleteExplosion?.Invoke();
-        GameManager.instance.GenerateExplosionParticle(transform.position);
+        GameManager.instance.GenerateExplosionParticle(transform.position, isDebri);
         Destroy(gameObject);
     }
 
-    private void CheckDamage()
+    private bool CheckDamage()
     {
         Collider2D[] cols = Physics2D.OverlapCircleAll(transform.position, _expRadius, whatIsEnemy);
 
+        bool isDebri = false;
         foreach(Collider2D col in cols)
         {
             IDamageable damageable = col.GetComponent<IDamageable>();
@@ -37,8 +38,11 @@ public class Ball : MonoBehaviour
                 Vector2 dir = col.transform.position - transform.position;
                 float power = ((_expRadius + 1) - dir.magnitude) * 200f;
                 damageable.OnDamage(1, gameObject, dir.normalized, power);
+                isDebri = true;
             }
         }
+
+        return isDebri; //1개이상 터졌다면
     }
 
     public void Fire(Vector2 dir, float power)

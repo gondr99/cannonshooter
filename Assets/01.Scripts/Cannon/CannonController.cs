@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Events;
-
+using DG.Tweening;
 public class CannonController : MonoBehaviour
 {
     public enum CannonState : short
@@ -18,7 +18,7 @@ public class CannonController : MonoBehaviour
 
     public UnityEvent<float> OnAngleChange = null;
     public UnityEvent<float> OnPowerChange = null;
-    public UnityEvent OnFire = null;
+    public UnityEvent<Transform> OnFire = null;
     public UnityEvent OnExplosion = null;
 
     private Transform _barrelTrm;
@@ -27,6 +27,7 @@ public class CannonController : MonoBehaviour
     private float _currentFirePower = 0f;
 
     private float _currentRotate = 0f;
+    private bool _isUITurn = false; //UI에서 클릭시 바로 발사되는걸 막아주는 변수
 
     
     [SerializeField] private CannonState _state = CannonState.Idle;
@@ -44,7 +45,7 @@ public class CannonController : MonoBehaviour
 
     private void HandleFire()
     {
-        if (Input.GetButtonDown("Jump") && (int)_state  < 2)
+        if (Input.GetButtonDown("Jump") && (int)_state  < 2 && _isUITurn == false)
         {
             _state = CannonState.Charging;
         }
@@ -56,25 +57,44 @@ public class CannonController : MonoBehaviour
         }
         if(Input.GetButtonUp("Jump") && _state == CannonState.Charging)
         {
-            FireCannon();
+            ReadyToFire();
         }
+
+        if (_isUITurn)
+            _isUITurn = false;
+    }
+
+    private void ReadyToFire()
+    {
+        _state = CannonState.Fire;
+
+        CameraManager.instance.SetCannonCamActive();
+        Sequence seq = DOTween.Sequence();
+        seq.AppendInterval(1f);
+        seq.AppendCallback(() =>
+        {
+            FireCannon();
+        });
     }
 
     private void FireCannon()
     {
-        _state = CannonState.Fire;
 
         Ball ball = Instantiate(_ballPrefab, _firePosTrm.position, Quaternion.identity) as Ball;
         ball.Fire(_firePosTrm.right, _currentFirePower);
         ball.OnCompleteExplosion += () =>
         {
-            _state = CannonState.Idle;
+            UIManager.instance.ShowTextMsg("-계속 진행하려면 Space Bar-", ()=> {
+                CameraManager.instance.SetRigCamActive();
+                _state = CannonState.Idle;
+                _isUITurn = true;
+            });
             _currentFirePower = 0;
             OnExplosion?.Invoke();
             CameraManager.instance.ShakeCam(4, 0.6f);
         };
 
-        OnFire?.Invoke();
+        OnFire?.Invoke(ball.transform);
         CameraManager.instance.ShakeCam(2 * _currentFirePower / 400, 0.6f);
     }
 

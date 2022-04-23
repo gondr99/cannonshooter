@@ -39,5 +39,7 @@ public class Debris : MonoBehaviour
     public void AddForceToDebri(Vector3 force)
     {
         _rigidbody.AddForce(force);
+
+        Destroy(gameObject, 1f);
     }
 }

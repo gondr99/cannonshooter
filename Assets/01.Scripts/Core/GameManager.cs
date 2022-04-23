@@ -6,7 +6,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
 
-    [SerializeField] ParticleSystem _explosionParticle;
+    [SerializeField] ExplosionEffect _explosionParticle;
     [SerializeField] Debris _debris;
 
     private void Awake()
@@ -18,9 +18,10 @@ public class GameManager : MonoBehaviour
         instance = this;
     }
 
-    public void GenerateExplosionParticle(Vector3 pos)
+    public void GenerateExplosionParticle(Vector3 pos, bool isDebri)
     {
-        ParticleSystem ps = Instantiate(_explosionParticle, pos, Quaternion.identity);
+        ExplosionEffect ps = Instantiate(_explosionParticle, pos, Quaternion.identity) as ExplosionEffect;
+        ps.PlayParticle(isDebri);
         Destroy( ps.gameObject, 2f); //2초후 삭제
     }
 
