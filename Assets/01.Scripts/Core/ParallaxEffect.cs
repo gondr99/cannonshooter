@@ -4,26 +4,43 @@ using UnityEngine;
 
 public class ParallaxEffect : MonoBehaviour
 {
-    [SerializeField] private float _parallaxRatio;
-    private Camera _mainCam;
-    private float length, startPos;
+    [SerializeField] private Vector2 _parallaxRatio;
+    private Transform _mainCamTrm;
+    private Vector3 _lastCamPos;
+    private float _textureUnitSizeX;
+    //private float _textureUnitSizeY; //Y축 인피니트를 위한 
     private void Start()
     {
-        _mainCam = CameraManager.instance.MainCam;
-        startPos = transform.position.x; //시작 위치
+        _mainCamTrm = CameraManager.instance.MainCam.transform;
+
+        _lastCamPos = _mainCamTrm.position;
 
         SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
-        length = sr.sprite.bounds.size.x; //너비
+        Sprite sprite = sr.sprite;
+        Texture2D texture = sprite.texture;
+
+        _textureUnitSizeX = texture.width / sprite.pixelsPerUnit; //텍스쳐의 너비가 몇 유닛인지 계산
+        //_textureUnitSizeY = texture.height / sprite.pixelsPerUnit;
+        
+        
     }
 
-    private void FixedUpdate()
+    private void LateUpdate()
     {
-        float dist = _mainCam.transform.position.x * _parallaxRatio;
+        Vector3 deltaMove = _mainCamTrm.position - _lastCamPos;
+        transform.position += new Vector3(deltaMove.x * _parallaxRatio.x, deltaMove.y * _parallaxRatio.y);
+        _lastCamPos = _mainCamTrm.position;
 
-        transform.position = new Vector3(startPos + dist, transform.position.y, transform.position.z);
+        if(Mathf.Abs( _mainCamTrm.position.x - transform.position.x) >= _textureUnitSizeX)
+        {
+            float offsetPositionX = (_mainCamTrm.position.x - transform.position.x) % _textureUnitSizeX;
+            transform.position = new Vector3(_mainCamTrm.position.x + offsetPositionX, transform.position.y);
+        }
 
-        float temp = _mainCam.transform.position.x * (1 - _parallaxRatio);
-        if (temp > startPos + length) startPos += length; //하나 더해서 이동
-        else if(temp < startPos - length) startPos -= length;
+        //if (Mathf.Abs(_mainCamTrm.position.y - transform.position.y) >= _textureUnitSizeY)
+        //{
+        //    float offsetPositionY = (_mainCamTrm.position.y - transform.position.y) % _textureUnitSizeY;
+        //    transform.position = new Vector3(transform.position.x , _mainCamTrm.position.y + offsetPositionY);
+        //}
     }
 }

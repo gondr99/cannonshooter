@@ -92,6 +92,12 @@ public class CannonController : MonoBehaviour
             _currentFirePower = 0;
             OnExplosion?.Invoke();
             CameraManager.instance.ShakeCam(4, 0.6f);
+
+            // 0.1초 대기후 0.2의 스케일로 내려갔다가, 그대로 0.5초 유지하고 다시 1의 스케일로 돌아온다.
+            TimeController.instance.ModifyTimeScale(0.2f, 0.1f, () =>
+            {
+                TimeController.instance.ModifyTimeScale(1f, 0.5f);
+            });
         };
 
         OnFire?.Invoke(ball.transform);

@@ -7,7 +7,7 @@ public class CameraRig : MonoBehaviour
 {
     [SerializeField] private float _moveSpeed = 5f;
     [SerializeField] private PolygonCollider2D _confiner;
-
+    [SerializeField] private bool _debugMode = false;
     private Vector3 _boundMax;
     private Vector3 _boundMin;  
     private void Start()
@@ -25,7 +25,11 @@ public class CameraRig : MonoBehaviour
     {
         float x = Input.GetAxisRaw("Horizontal");
         Vector3 pos = transform.position;
-        pos.x = Mathf.Clamp(pos.x + _moveSpeed * x * Time.deltaTime, _boundMin.x, _boundMax.x);
+        
+        if(_debugMode)
+            pos.x = pos.x + _moveSpeed * x * Time.deltaTime;
+        else
+            pos.x = Mathf.Clamp(pos.x + _moveSpeed * x * Time.deltaTime, _boundMin.x, _boundMax.x);
         transform.position = pos;
     }
 
